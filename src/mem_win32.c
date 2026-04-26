@@ -23,8 +23,8 @@ void* mem_heap_realloc(void* ptr, const usize_t new_size) {
     return HeapReAlloc(hHeap, HEAP_ZERO_MEMORY, ptr, new_size);
 }
 
-void mem_heap_free(void* ptr) {
-    HeapFree(hHeap, 0, ptr);
+b8_t mem_heap_free(void* ptr) {
+    return HeapFree(hHeap, 0, ptr) != 0;
 }
 
 static INLINE DWORD get_protection(const u8_t prot) {

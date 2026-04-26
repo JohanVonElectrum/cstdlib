@@ -77,3 +77,22 @@ b8_t arena_free(arena_t* const arena) {
     arena->commited = from;
     return true;
 }
+
+void* heap_allocator_alloc(void* allocator, const usize_t size, const usize_t alignment) {
+    return mem_heap_alloc(size);
+}
+
+void* heap_allocator_realloc(void* allocator, void* ptr, const usize_t size, const usize_t alignment) {
+    return mem_heap_realloc(ptr, size);
+}
+
+b8_t heap_allocator_free(void* allocator, void* ptr) {
+    return mem_heap_free(ptr);
+}
+
+const allocator_t HEAP_ALLOCATOR = (allocator_t){
+    .allocator = nullptr,
+    .alloc = heap_allocator_alloc,
+    .realloc = heap_allocator_realloc,
+    .free = heap_allocator_free
+};

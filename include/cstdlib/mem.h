@@ -41,7 +41,7 @@ static INLINE void mem_zero(void* dst, const usize_t count) {
 CSTDLIB_EXPORT void* mem_heap_alloc(usize_t size);
 CSTDLIB_EXPORT void* mem_heap_calloc(usize_t num, usize_t size);
 CSTDLIB_EXPORT void* mem_heap_realloc(void* ptr, usize_t new_size);
-CSTDLIB_EXPORT void mem_heap_free(void* ptr);
+CSTDLIB_EXPORT b8_t mem_heap_free(void* ptr);
 
 // ============================================================================
 // Virtual memory (page-level reservation, commit, protection, etc.)
