@@ -16,28 +16,37 @@ include(CTest)
 option(BUILD_SHARED_LIBS "Build the shared cstdlib library" ON)
 option(BUILD_STATIC_LIBS "Build the static cstdlib library" ON)
 
-if(NOT BUILD_SHARED_LIBS AND NOT BUILD_STATIC_LIBS)
+if (NOT BUILD_SHARED_LIBS AND NOT BUILD_STATIC_LIBS)
     message(FATAL_ERROR "At least one of BUILD_SHARED_LIBS or BUILD_STATIC_LIBS must be ON")
-endif()
+endif ()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY  "${CMAKE_BINARY_DIR}/bin")
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY  "${CMAKE_BINARY_DIR}/lib")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
 set(GENERATED_INCLUDE_ROOT "${CMAKE_CURRENT_BINARY_DIR}/generated/include")
 set(GENERATED_INCLUDE_DIR "${GENERATED_INCLUDE_ROOT}/cstdlib")
 file(MAKE_DIRECTORY "${GENERATED_INCLUDE_DIR}")
 
-add_library(cstdlib_obj OBJECT src/cstdlib.c
+add_library(cstdlib_obj OBJECT
+    src/cstdlib.c
     src/mem.c
-    src/mem_win32.c
     src/alloc.c
-    src/cstdlib_win32.c)
+    src/string.c
+)
+
+if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    target_sources(cstdlib_obj PRIVATE
+        src/mem_win32.c
+        src/console_win32.c
+    )
+endif ()
+
 target_include_directories(cstdlib_obj PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/$include"
     "${GENERATED_INCLUDE_ROOT}"
 )
+
 target_compile_definitions(cstdlib_obj PRIVATE cstdlib_obj_EXPORTS)
 
 generate_export_header(cstdlib_obj
@@ -52,17 +61,9 @@ function(setup_cstdlib_target target is_static)
         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
     )
 
-    if(is_static)
+    if (is_static)
         target_compile_definitions(${target} PUBLIC CSTDLIB_STATIC_DEFINE)
-    endif()
-
-    if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
-        target_compile_options(${target} PRIVATE -ffreestanding)
-        target_link_options(${target} PRIVATE -nostdlib)
-    elseif(MSVC)
-        target_compile_options(${target} PRIVATE /GR- /GS- /EHs-)
-        target_link_options(${target} PRIVATE /NODEFAULTLIB)
-    endif()
+    endif ()
 
     set_target_properties(${target} PROPERTIES
         VERSION ${PROJECT_VERSION}
@@ -70,47 +71,48 @@ function(setup_cstdlib_target target is_static)
     )
 endfunction()
 
-if(BUILD_SHARED_LIBS)
+if (BUILD_SHARED_LIBS)
     add_library(cstdlib_shared SHARED $<TARGET_OBJECTS:cstdlib_obj>)
     add_library(cstdlib::shared ALIAS cstdlib_shared)
     setup_cstdlib_target(cstdlib_shared FALSE)
-endif()
+endif ()
 
-if(BUILD_STATIC_LIBS)
+if (BUILD_STATIC_LIBS)
     add_library(cstdlib_static STATIC $<TARGET_OBJECTS:cstdlib_obj>)
     add_library(cstdlib::static ALIAS cstdlib_static)
     setup_cstdlib_target(cstdlib_static TRUE)
-endif()
+endif ()
 
-if(BUILD_SHARED_LIBS)
+if (BUILD_SHARED_LIBS)
     add_library(cstdlib::cstdlib ALIAS cstdlib_shared)
-else()
+else ()
     add_library(cstdlib::cstdlib ALIAS cstdlib_static)
-endif()
+endif ()
 
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
+if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
     add_subdirectory(tests)
-endif()
+endif ()
 
-if(BUILD_SHARED_LIBS)
+if (BUILD_SHARED_LIBS)
     install(TARGETS cstdlib_shared
         EXPORT cstdlibTargets
-        LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
-endif()
+endif ()
 
-if(BUILD_STATIC_LIBS)
+if (BUILD_STATIC_LIBS)
     install(TARGETS cstdlib_static
         EXPORT cstdlibTargets
-        ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     )
-endif()
+endif ()
 
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(DIRECTORY "${GENERATED_INCLUDE_DIR}/"
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/cstdlib
-    FILES_MATCHING PATTERN "*.h")
+    FILES_MATCHING PATTERN "*.h"
+)
 
 install(EXPORT cstdlibTargets
     FILE cstdlibTargets.cmake

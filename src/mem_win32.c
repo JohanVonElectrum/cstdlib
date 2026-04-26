@@ -5,7 +5,7 @@
 static HANDLE hHeap;
 static SYSTEM_INFO info;
 
-b8_t mem_init(void) {
+b8_t cstdlib_mem_init(void) {
     GetSystemInfo(&info);
     hHeap = GetProcessHeap();
     return hHeap != NULL;

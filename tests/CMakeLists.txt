@@ -4,14 +4,14 @@ add_library(ctest STATIC
 target_include_directories(ctest PUBLIC ctest)
 
 target_link_libraries(ctest PRIVATE
-    cstdlib::static
+    cstdlib::shared
 )
 
 add_executable(test_cstdlib src/test_cstdlib.c)
 
 target_link_libraries(test_cstdlib PRIVATE
     ctest
-    cstdlib::static
+    cstdlib::shared
 )
 
 add_test(NAME cstdlib COMMAND test_cstdlib)

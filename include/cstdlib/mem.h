@@ -3,6 +3,8 @@
 #include <cstdlib/api.h>
 #include <cstdlib/common.h>
 
+CSTDLIB_EXPORT b8_t cstdlib_mem_init(void);
+
 // ============================================================================
 // Memory alignment utilities (low-level helpers used by allocators and VM)
 // ============================================================================
