@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdlib/api.h>
+#include <cstdlib/nullability.h>
 #include <cstdlib/primitives.h>
 
 #define EXPAND(...) $0$EXPAND($0$EXPAND($0$EXPAND($0$EXPAND(__VA_ARGS__))))

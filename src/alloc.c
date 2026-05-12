@@ -61,11 +61,19 @@ void* arena_alloc(arena_t* const arena, const usize_t size, const usize_t alignm
     return current;
 }
 
-void arena_reset(arena_t* const arena) {
-    arena_reset_to(arena, arena->start);
+void* arena_calloc(arena_t* const arena, const usize_t count, const usize_t size, const usize_t alignment) {
+    const usize_t total_size = count * size;
+    void* ptr = arena_alloc(arena, total_size, alignment);
+    if (ptr == nullptr) return nullptr;
+    mem_set(ptr, 0, total_size);
+    return ptr;
 }
 
-INLINE void arena_reset_to(arena_t* const arena, void* const addr) {
+void $0$arena_reset(arena_t* const arena) {
+    $0$arena_reset_to(arena, arena->start);
+}
+
+INLINE void $0$arena_reset_to(arena_t* const arena, void* const addr) {
     arena->current = addr;
 }
 
@@ -82,6 +90,10 @@ void* heap_allocator_alloc(void* allocator, const usize_t size, const usize_t al
     return mem_heap_alloc(size);
 }
 
+void* heap_allocator_calloc(void* allocator, const usize_t count, const usize_t size, const usize_t alignment) {
+    return mem_heap_calloc(count, size);
+}
+
 void* heap_allocator_realloc(void* allocator, void* ptr, const usize_t size, const usize_t alignment) {
     return mem_heap_realloc(ptr, size);
 }
@@ -93,6 +105,36 @@ b8_t heap_allocator_free(void* allocator, void* ptr) {
 const allocator_t HEAP_ALLOCATOR = (allocator_t){
     .allocator = nullptr,
     .alloc = heap_allocator_alloc,
+    .calloc = heap_allocator_calloc,
     .realloc = heap_allocator_realloc,
     .free = heap_allocator_free
 };
+
+allocator_t arena_allocator(arena_t* arena) {
+    return (allocator_t){
+        .allocator = arena,
+        .alloc = (allocator_alloc_fn_t) arena_alloc,
+        .calloc = (allocator_calloc_fn_t) arena_calloc,
+        .realloc = nullptr,
+        .free = nullptr
+    };
+}
+
+void* $1$allocator_alloc(const usize_t size, const usize_t alignment, const allocator_t* const allocator) {
+    if (allocator->alloc == nullptr) return nullptr;
+    return allocator->alloc(allocator->allocator, size, alignment);
+}
+
+void* $1$allocator_calloc(const usize_t count, const usize_t size, const usize_t alignment, const allocator_t* const allocator) {
+    if (allocator->calloc == nullptr) return nullptr;
+    return allocator->calloc(allocator->allocator, count, size, alignment);
+}
+void* $1$allocator_realloc(void* const ptr, const usize_t size, const usize_t alignment, const allocator_t* const allocator) {
+    if (allocator->realloc == nullptr) return nullptr;
+    return allocator->realloc(allocator->allocator, ptr, size, alignment);
+}
+
+b8_t $1$allocator_free(void* const ptr, const allocator_t* const allocator) {
+    if (allocator->free == nullptr) return false;
+    return allocator->free(allocator->allocator, ptr);
+}

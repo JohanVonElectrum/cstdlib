@@ -39,6 +39,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     target_sources(cstdlib_obj PRIVATE
         src/mem_win32.c
         src/console_win32.c
+        src/thread_win32.c
     )
 endif ()
 
